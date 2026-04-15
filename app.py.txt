@@ -1,0 +1,87 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+
+st.set_page_config(page_title="PFE CMR - Workforce Forecast", layout="wide")
+
+st.title("Forecasting Public Workforce in Morocco")
+st.write("Interactive dashboard for historical analysis and forecasting scenarios.")
+
+# -----------------------------
+# Load your data
+# -----------------------------
+# Replace these with your real saved files
+workforce_df = pd.read_csv("workforce_df.csv")
+
+forecast_df = pd.DataFrame({
+    "year": [2026, 2027, 2028, 2029, 2030],
+    "naive_forecast": [616380, 616380, 616380, 616380, 616380],
+    "linear_fe_safe_forecast": [625463, 633286, 641514, 649509, 657552],
+    "linear_trend_forecast": [679676, 690170, 700664, 711158, 721652]
+})
+
+results_df = pd.DataFrame({
+    "Model": ["Naive", "Linear FE Safe", "Linear Trend", "LSTM"],
+    "MAPE": [3.2, 4.05, 4.11, 4.08]
+})
+
+# -----------------------------
+# Sidebar
+# -----------------------------
+st.sidebar.header("Navigation")
+section = st.sidebar.radio(
+    "Go to",
+    ["Historical Data", "Model Comparison", "Forecast Scenarios"]
+)
+
+# -----------------------------
+# Historical Data
+# -----------------------------
+if section == "Historical Data":
+    st.subheader("Historical Workforce Evolution")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(workforce_df["year"], workforce_df["active_employees"], label="Active Employees", linewidth=2)
+    ax.plot(workforce_df["year"], workforce_df["entries"], label="Entries", linestyle="--")
+    ax.plot(workforce_df["year"], workforce_df["exits"], label="Exits", linestyle="--")
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Count")
+    ax.set_title("Historical Evolution")
+    ax.legend()
+    st.pyplot(fig)
+
+    st.dataframe(workforce_df.tail(10), use_container_width=True)
+
+# -----------------------------
+# Model Comparison
+# -----------------------------
+elif section == "Model Comparison":
+    st.subheader("Model Comparison")
+
+    st.dataframe(results_df, use_container_width=True)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.bar(results_df["Model"], results_df["MAPE"])
+    ax.set_ylabel("MAPE (%)")
+    ax.set_title("Comparison of Models")
+    plt.xticks(rotation=20)
+    st.pyplot(fig)
+
+# -----------------------------
+# Forecast Scenarios
+# -----------------------------
+elif section == "Forecast Scenarios":
+    st.subheader("Forecast Scenarios (2026–2030)")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(workforce_df["year"], workforce_df["active_employees"], label="Historical", linewidth=2)
+    ax.plot(forecast_df["year"], forecast_df["naive_forecast"], label="Naive", linestyle="--")
+    ax.plot(forecast_df["year"], forecast_df["linear_fe_safe_forecast"], label="Linear FE Safe", linestyle="--")
+    ax.plot(forecast_df["year"], forecast_df["linear_trend_forecast"], label="Linear Trend", linestyle="--")
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Employees")
+    ax.set_title("Forecast Comparison")
+    ax.legend()
+    st.pyplot(fig)
+
+    st.dataframe(forecast_df, use_container_width=True)
